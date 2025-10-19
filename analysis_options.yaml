@@ -1,0 +1,25 @@
+# This file configures the analyzer, which statically analyzes Dart code to
+# check for errors, warnings, and lints.
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
+# invoked from the command line by running `flutter analyze`.
+
+# ✅ Enables recommended lints for Flutter apps, packages, and plugins.
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Uncomment and customize rules below as needed:
+    # avoid_print: false           # Allow print statements during dev
+    # prefer_single_quotes: true  # Enforce single quotes for strings
+    # always_use_package_imports: true
+    # unnecessary_this: true
+    # prefer_const_constructors: true
+    # prefer_final_locals: true
+    # sort_pub_dependencies: true
+    # use_super_parameters: true
+    # prefer_single_quotes: true
+# ✅ To activate this config, make sure flutter_lints is added to pubspec.yaml:
+# dev_dependencies:
+#   flutter_lints: ^3.0.1
+# Then run: flutter pub get

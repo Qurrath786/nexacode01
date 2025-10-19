@@ -1,4 +1,4 @@
-name: nexacode_terminal_os
+name: nexacode
 description: A modular terminal OS built in Flutter
 version: 1.0.0+1
 
@@ -8,14 +8,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_highlight: ^0.7.0
+  shared_preferences: ^2.2.2
   provider: ^6.1.2
   path_provider: ^2.1.1
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.1.1
+  cloud_firestore: ^6.0.3
+  http: ^1.5.0
+  flutter_dotenv: ^6.0.0
+  highlight: ^0.7.0
+  flutter_code_editor: ^0.3.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+flutter_lints: ^3.0.1
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/nexa_logo.png
+  fonts:
+    - family: FiraCode
+      fonts:
+        - asset: assets/fonts/FiraCode-Regular.ttf

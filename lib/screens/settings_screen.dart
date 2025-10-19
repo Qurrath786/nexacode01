@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nexacode/widgets/language_picker.dart';
 import 'package:nexacode/l10n/app_localizations.dart';
+import 'package:nexacode/services/locale_manager.dart'; // ✅ Added import
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -76,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            LanguagePicker(),
+            const LanguagePicker(),
 
             const SizedBox(height: 32),
 
@@ -111,8 +112,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   items: codeLanguages.map((lang) {
                     return DropdownMenuItem(value: lang, child: Text(lang));
                   }).toList(),
-                  onChanged: (val) {
+                  onChanged: (val) async {
                     setState(() => selectedCodeLang = val!);
+                    await LocaleManager.saveLanguage(val!); // ✅ Fixed await
+                    // ignore: todo
                     // TODO: Save to LocaleManager or SharedPreferences
                   },
                 ),
@@ -135,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.greenAccent.withOpacity(0.6),
+                      color: Colors.greenAccent.withAlpha(153), // ✅ Fixed
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -177,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: Colors.greenAccent,
+          activeThumbColor: Colors.greenAccent,
           inactiveThumbColor: Colors.grey,
           inactiveTrackColor: Colors.grey.shade800,
         ),

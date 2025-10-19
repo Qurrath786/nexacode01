@@ -1,18 +1,96 @@
-void _handleCommand(String input) async {
-  final output = await handleCommand(input);
-  setState(() => feedback = output);
-  _commandController.clear();
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class DashboardScreen extends StatefulWidget {
+  final User? user;
+  const DashboardScreen({super.key, this.user});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final TextEditingController _commandController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  String feedback = '>> Welcome to NexaCode Terminal';
+  bool showBoot = false;
+  bool showCursor = true;
+
+  List<String> commandHistory = [];
+  int historyIndex = -1;
+
+  List<String> suggestions = [
+    'help',
+    'clear',
+    'setlang dart',
+    'whoami',
+    'logout',
+  ];
+
+  List<Map<String, dynamic>> modules = [
+    {
+      'label': 'Logout',
+      'route': '/login',
+      'icon': Icons.logout,
+    },
+    {
+      'label': 'Settings',
+      'route': '/settings',
+      'icon': Icons.settings,
+    },
+    {
+      'label': 'Files',
+      'route': '/files',
+      'icon': Icons.folder,
+    },
+    {
+      'label': 'AI Chat',
+      'route': '/chat',
+      'icon': Icons.smart_toy,
+    },
+  ];
+
+  Future<String> handleCommand(String input) async {
+    commandHistory.insert(0, input);
+    historyIndex = -1;
+
+    final cmd = input.trim().toLowerCase();
+
+    if (cmd == 'clear') return '';
+    if (cmd == 'logout') {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushReplacementNamed(context, '/login');
+      return '>> Logged out.';
+    }
+    if (cmd.startsWith('setlang')) {
+      final parts = input.split(' ');
+      if (parts.length > 1) {
+        return '>> Language set to ${parts[1]}';
+      }
+    }
+    if (cmd == 'whoami') {
+      return '>> ${widget.user?.email ?? 'Guest'}';
+    }
+
+    return '>> Command "$input" not recognized.';
+  }
+
+  void _handleCommand(String input) async {
+    final output = await handleCommand(input);
+    setState(() => feedback = output);
+    _commandController.clear();
+  }
 
   void _navigateHistory(bool up) {
     if (commandHistory.isEmpty) return;
 
     setState(() {
-      if (up) {
-        historyIndex = (historyIndex + 1).clamp(0, commandHistory.length - 1);
-      } else {
-        historyIndex = (historyIndex - 1).clamp(0, commandHistory.length - 1);
-      }
+      historyIndex = up
+          ? (historyIndex + 1).clamp(0, commandHistory.length - 1)
+          : (historyIndex - 1).clamp(0, commandHistory.length - 1);
+
       _commandController.text = commandHistory[historyIndex];
       _commandController.selection = TextSelection.fromPosition(
         TextPosition(offset: _commandController.text.length),
@@ -56,15 +134,18 @@ void _handleCommand(String input) async {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    RawKeyboardListener(
+                    KeyboardListener(
                       focusNode: _focusNode,
-                      onKey: (event) {
-                        if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
-                          _navigateHistory(true);
-                        } else if (event.isKeyPressed(
-                          LogicalKeyboardKey.arrowDown,
-                        )) {
-                          _navigateHistory(false);
+                      onKeyEvent: (event) {
+                        if (event is KeyDownEvent) {
+                          if (HardwareKeyboard.instance.isLogicalKeyPressed(
+                              LogicalKeyboardKey.arrowUp)) {
+                            _navigateHistory(true);
+                          } else if (HardwareKeyboard.instance
+                              .isLogicalKeyPressed(
+                                  LogicalKeyboardKey.arrowDown)) {
+                            _navigateHistory(false);
+                          }
                         }
                       },
                       child: TextField(
@@ -77,7 +158,7 @@ void _handleCommand(String input) async {
                         decoration: InputDecoration(
                           hintText: showCursor
                               ? 'nexacode@web:~\$ Type a command _'
-                              : 'nexacode@web:~\$ Type a command  ',
+                              : 'nexacode@web:~\$ Type a command',
                           hintStyle: const TextStyle(
                             color: Colors.greenAccent,
                             fontFamily: 'FiraCode',
@@ -139,7 +220,7 @@ void _handleCommand(String input) async {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.greenAccent.withOpacity(0.6),
+                                  color: Colors.greenAccent.withAlpha(153),
                                   blurRadius: 12,
                                   spreadRadius: 2,
                                 ),
@@ -168,3 +249,9 @@ void _handleCommand(String input) async {
                       }).toList(),
                     ),
                   ],
+                ),
+              ),
+      ),
+    );
+  }
+}
