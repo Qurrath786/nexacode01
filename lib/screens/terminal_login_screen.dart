@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart'; // for kIsWeb
 
 class TerminalLoginScreen extends StatefulWidget {
   const TerminalLoginScreen({super.key});
@@ -76,7 +77,18 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
     _shakeController.forward(from: 0);
   }
 
+  // for kIsWeb
+
   Future<void> _login() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      _triggerShake();
+      setState(() {
+        _statusMessage = '>> Email and password required. █';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _statusMessage = '>> Authenticating... █';
@@ -95,15 +107,12 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
 
       Navigator.of(context)
           .pushReplacementNamed('/home', arguments: userCredential.user);
-    } on FirebaseAuthException catch (e) {
-      _triggerShake();
-      setState(() {
-        _statusMessage = '>> FirebaseAuth error: ${e.message} █';
-      });
     } catch (e) {
+      print('🔥 Firebase login error: $e');
       _triggerShake();
       setState(() {
-        _statusMessage = '>> General error: ${e.toString()} █';
+        _statusMessage =
+            '>> Login failed: ${e.runtimeType} – ${e.toString()} █';
       });
     } finally {
       setState(() {
@@ -113,6 +122,15 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
   }
 
   Future<void> _register() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      _triggerShake();
+      setState(() {
+        _statusMessage = '>> Email and password required. █';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _statusMessage = '>> Creating account... █';
@@ -131,15 +149,12 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
 
       Navigator.of(context)
           .pushReplacementNamed('/home', arguments: userCredential.user);
-    } on FirebaseAuthException catch (e) {
-      _triggerShake();
-      setState(() {
-        _statusMessage = '>> FirebaseAuth error: ${e.message} █';
-      });
     } catch (e) {
+      print('🔥 Firebase registration error: $e');
       _triggerShake();
       setState(() {
-        _statusMessage = '>> General error: ${e.toString()} █';
+        _statusMessage =
+            '>> Registration failed: ${e.runtimeType} – ${e.toString()} █';
       });
     } finally {
       setState(() {
@@ -149,6 +164,14 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
   }
 
   Future<void> _anonymousLogin() async {
+    if (kIsWeb) {
+      _triggerShake();
+      setState(() {
+        _statusMessage = '>> Anonymous login is not supported on Web. █';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _statusMessage = '>> Connecting anonymously... █';
@@ -164,9 +187,11 @@ class _TerminalLoginScreenState extends State<TerminalLoginScreen>
       Navigator.of(context)
           .pushReplacementNamed('/home', arguments: userCredential.user);
     } catch (e) {
+      print('🔥 Firebase anonymous login error: $e');
       _triggerShake();
       setState(() {
-        _statusMessage = '>> Anonymous login failed: ${e.toString()} █';
+        _statusMessage =
+            '>> Anonymous login failed: ${e.runtimeType} – ${e.toString()} █';
       });
     } finally {
       setState(() {

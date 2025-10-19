@@ -1,28 +1,34 @@
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'dart:async';
 
 class FileManager {
-  static Future<String> _getDirPath() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return dir.path;
+  static final List<String> _mockFiles = [
+    'main.dart',
+    'README.md',
+    'notes.txt',
+    'config.json',
+  ];
+
+  static Future<List<String>> listFiles() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return List.from(_mockFiles);
+  }
+
+  static Future<void> deleteFile(String filename) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    _mockFiles.remove(filename);
+    print('>> Deleted: $filename');
   }
 
   static Future<void> saveFile(String filename, String content) async {
-    final path = await _getDirPath();
-    final file = File('$path/$filename');
-    await file.writeAsString(content);
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!_mockFiles.contains(filename)) {
+      _mockFiles.add(filename);
+    }
+    print('>> Saved: $filename');
   }
 
-  static Future<String> loadFile(String filename) async {
-    final path = await _getDirPath();
-    final file = File('$path/$filename');
-    return file.existsSync() ? await file.readAsString() : '';
-  }
-
-  static Future<List<String>> listFiles() async {
-    final path = await _getDirPath();
-    final dir = Directory(path);
-    final files = dir.listSync().whereType<File>();
-    return files.map((f) => f.path.split('/').last).toList();
+  static Future<String> readFile(String filename) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return '// Contents of $filename\nvoid main() => print("Hello NexaCode");';
   }
 }

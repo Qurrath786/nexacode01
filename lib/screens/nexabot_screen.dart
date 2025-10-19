@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../core/ai_services.dart'; // ✅ Corrected import
+import '../core/ai_services.dart';
 import '../models/message.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/pinned_drawer.dart';
@@ -15,12 +15,14 @@ class NexaBotScreen extends StatefulWidget {
 class _NexaBotScreenState extends State<NexaBotScreen> {
   final TextEditingController _inputController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  final AIService aiService = AIService(); // ✅ Corrected instantiation
+  final ScrollController _scrollController = ScrollController();
+  final AIService aiService = AIService();
 
   List<Message> messages = [];
   List<Message> pinnedMessages = [];
 
   bool showCursor = true;
+  bool isLoading = false;
   Timer? cursorTimer;
 
   final List<String> suggestions = [
@@ -43,6 +45,7 @@ class _NexaBotScreenState extends State<NexaBotScreen> {
   void dispose() {
     cursorTimer?.cancel();
     _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -53,12 +56,21 @@ class _NexaBotScreenState extends State<NexaBotScreen> {
     _inputController.clear();
     setState(() {
       messages.add(Message(text: command, isUser: true));
+      messages.add(Message(text: '>> Thinking...', isUser: false));
+      isLoading = true;
     });
 
+    _scrollToBottom();
+
     final reply = await aiService.getReply(command);
+
     setState(() {
+      messages.removeLast(); // Remove "Thinking..."
       messages.add(Message(text: reply, isUser: false));
+      isLoading = false;
     });
+
+    _scrollToBottom();
   }
 
   void _togglePin(Message msg) {
@@ -66,9 +78,31 @@ class _NexaBotScreenState extends State<NexaBotScreen> {
       msg.isPinned = !msg.isPinned;
       if (msg.isPinned) {
         pinnedMessages.add(msg);
+        _showSnack('📌 Pinned message');
       } else {
         pinnedMessages.remove(msg);
+        _showSnack('📍 Unpinned message');
       }
+    });
+  }
+
+  void _showSnack(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text, style: const TextStyle(color: Colors.greenAccent)),
+        backgroundColor: Colors.black,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent + 100,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -96,6 +130,7 @@ class _NexaBotScreenState extends State<NexaBotScreen> {
           children: [
             Expanded(
               child: ListView.builder(
+                controller: _scrollController,
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
                   final msg = messages[index];
@@ -108,7 +143,6 @@ class _NexaBotScreenState extends State<NexaBotScreen> {
             ),
             const SizedBox(height: 20),
             KeyboardListener(
-              // ✅ Replaced deprecated RawKeyboardListener
               focusNode: _focusNode,
               onKeyEvent: (_) {},
               child: TextField(
